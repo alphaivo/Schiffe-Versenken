@@ -5,7 +5,7 @@
 
 import pygame
 pygame.init()
-#from Sekretaer import *
+from Sekretaer import *
 from spielfeld import Spielfeld
 
 
@@ -16,8 +16,6 @@ class Battleship:
         self.__gsf = Spielfeld((1127//1, 120//1), self.__surface) # --------"---------
         self.__ships = [] # rectangles
         self.__ship_images = []
-
-
 
         text = ""
         run = True
@@ -56,11 +54,8 @@ class Battleship:
 
             pygame.display.update()
 
-        # !!! TO-DO:
-        # self.__sek = Sekretaer(self.__pcnummer)
-        # gegnerIP = "10.16.102." + str(self.__pcnummer)
-        # self.__k = Kanaele(gegnerIP, 55555)
-
+        # !!! TO-DO:✓ 
+        self.__sek = Sekretaer(self.__pcnummer)
 
     def aufbauPhase(self):
         def get_snapped_ship(snapship):
@@ -110,6 +105,9 @@ class Battleship:
 
             return ship_squares
 
+        #def get_rect_from_ship_squares(squares):
+
+
         # load ships (pixel-values for big screen)
         SHIP0_IMAGE = pygame.image.load('resources/ship1.png')
         SHIP0 = pygame.transform.scale(SHIP0_IMAGE, (60, 180))
@@ -152,6 +150,7 @@ class Battleship:
         button = pygame.Rect(815, 600, 230, 67)
 
         active_ship = None
+        rotate_event = False
         run = True
         clock = pygame.time.Clock()
         while run:
@@ -176,19 +175,22 @@ class Battleship:
 
                     if button.collidepoint(event.pos) and all_placed:
                         run = False
-                        # !!! TO-DO:
+                        # !!! TO-DO:✓ 
                         # - senden des eigenen Spielfelds an den Gegner
                         # - empfangen des gegnerischen Spielfelds
+                        self.__gsf.setzeSchiffe(self.__sek.kommuniziereSchiffe(self.__msf.gibSchiffe()))
 
                     if event.button == 1:
                         for num in range(len(ships)):
                             if ships[num].collidepoint(event.pos):
                                 active_ship = num
+                                rotate_event = False
 
                     elif event.button == 3:
                         for num in range(len(ships)):
                             if ships[num].collidepoint(event.pos):
                                 active_ship = num
+                                rotate_event = True
 
                     if active_ship != None:
                         x1, y1 = ships[active_ship].topleft
@@ -196,7 +198,7 @@ class Battleship:
                         if (172 < x1 < 813) and (100 < y1 < 741) and (172 < x2 < 813) and (100 < y2 < 741):
                             snapped_ship = get_snapped_ship(ships[active_ship])
                             old_ship_squares = get_ship_squares(snapped_ship)
-                            self.__gsf.setzteSchiff(old_ship_squares, None) # !!! must be changed to self.__msf
+                            self.__msf.setzeSchiff(old_ship_squares, None)
                         else:
                             old_ship_squares = None
 
@@ -211,12 +213,12 @@ class Battleship:
                                 new_ship_squares = get_ship_squares(snapped_ship)
                                 potential_squares = get_border_coordinates(new_ship_squares)
                                 for coord in potential_squares:
-                                    if not (self.__gsf.istFrei(coord)): # !!! must be changed to self.__msf
+                                    if not (self.__msf.istFrei(coord)):
                                         squares_free = False
 
                                 if squares_free:
                                     ships[active_ship] = snapped_ship
-                                    self.__gsf.setzteSchiff(old_ship_squares, new_ship_squares)  # !!! must be changed to self.__msf
+                                    self.__msf.setzeSchiff(old_ship_squares, new_ship_squares)  
                                 else: # redundancy
                                     if ships[active_ship].height <= 60:
                                         ship_images[active_ship] = pygame.transform.rotate(ship_images[active_ship], 90)
@@ -249,7 +251,7 @@ class Battleship:
                                 new_ship_squares = get_ship_squares(snapped_ship)
                                 potential_squares = get_border_coordinates(new_ship_squares)
                                 for coord in potential_squares:
-                                    if not (self.__gsf.istFrei(coord)):
+                                    if not (self.__msf.istFrei(coord)):
                                         squares_free = False
 
                                 for x, y in new_ship_squares:
@@ -261,12 +263,12 @@ class Battleship:
                                     new_ship = ship_images[active_ship].get_rect()
                                     new_ship.topleft = ships[active_ship].topleft
                                     ships[active_ship] = new_ship
-                                    self.__gsf.setzteSchiff(old_ship_squares, new_ship_squares)  # must be changed to self.__msf
+                                    self.__msf.setzeSchiff(old_ship_squares, new_ship_squares)  
 
                             active_ship = None
 
                 if event.type == pygame.MOUSEMOTION:
-                    if active_ship != None:
+                    if (active_ship != None) and (not rotate_event):
                         ships[active_ship].move_ip(event.rel)
 
             # grey outline
@@ -301,8 +303,7 @@ class Battleship:
         self.__ship_images = ship_images
 
     def beschussPhase(self):
-        clicked = []
-        
+
         def get_coords(coords):  #//2 for smaller display
             x, y = coords[0], coords[1]
             x -= 1127//1
@@ -311,11 +312,15 @@ class Battleship:
             y = y // (60 // 1)
             return x, y
 
+        clicked = []
+
         clock = pygame.time.Clock()
+        amZug = self.__sek.gibErster()
         run = True
         while run:
             draw_window()
             draw_text('beschussphase', font2, (40, 100, 40), 720, 20)
+
 
             # draw ships
             for i in range(len(self.__ships)):
@@ -323,6 +328,8 @@ class Battleship:
                 pygame.draw.rect(self.__surface, "green", self.__ships[i], 1)  # optional
 
             self.__gsf.zeichneBrett()
+
+            self.__msf.zeichneBrett()
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -332,24 +339,66 @@ class Battleship:
                     if event.key == pygame.K_ESCAPE:
                         pygame.quit()
 
-                # Abschussdetektion
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    x, y = get_coords(event.pos)
+                if amZug:
+                    # Abschussdetektion
+                    # TO-DO print('am Zug')
+                    if event.type == pygame.MOUSEBUTTONDOWN:
+                        x, y = get_coords(event.pos)
 
-                    # TO-DO: Multiplayer-Abwechslung
+                        # TO-DO: Multiplayer-Abwechslung✓ 
 
-                    if x in range(10) and y in range(10):
-                        if not ((x, y) in clicked):
-                            if event.button == 1:
-                                clicked.append((x, y))
-                                self.__gsf.beschieße((x, y))
+                        if x in range(10) and y in range(10):
+                            if not ((x, y) in clicked):
+                                if event.button == 1:
+                                    clicked.append((x, y))
+                                    self.__gsf.beschieße((x, y))
+                                    self.__sek.sendeZug((x,y))
+
+                                    if not self.__gsf.istFrei((x, y)):  # !!! Dubios!
+                                        #schiff = []
+                                        id = None
+                                        for i in range(len(self.__gsf.gibSchiffe())):
+                                            for coord in self.__gsf.gibSchiffe()[i]:
+                                                if (x, y) == coord:
+                                                    id = i
+                                                    #schiff = self.__gsf.gibSchiffe()[i]
+                                        if self.__gsf.istVersenkt(id):
+                                            # TO-DO: explosion sound effect
+                                            pass
+
+
+
+                                    else:
+                                        amZug = False
+
+                                    if self.__gsf.sindVersenkt():
+                                        print('Sieg') # TO-DO
+                                        run = False
+
+
+
+                            
+                else:
+                    draw_text("warte auf gegner...", font2, (40, 100, 40), 650, 1000)
+                    pygame.display.flip()
+                    gegnerZ = self.__sek.empfangeZug()
+                    self.__msf.beschieße(gegnerZ)
+                    if self.__msf.sindVersenkt():
+                        print('verloren') # TO-DO
+                        run = False
+                    
+                    if self.__msf.istFrei(gegnerZ):
+                        amZug = True
 
             x0, y0 = pygame.mouse.get_pos()
             x, y = get_coords((x0, y0))
             if x in range(10) and y in range(10):
-                if not ((x, y) in clicked):
+                if not ((x, y) in clicked) and amZug:
                     square = pygame.Rect(1127 // 1 + x * 60 + 1, 120 // 1 + y * 60 + 1, 58, 58)  # //2 bzw. 30 bzw. 28 bei kleinerem Bildschirm
                     pygame.draw.rect(self.__surface, (50, 50, 50), square)
+
+            if amZug:
+                draw_text("feuer frei!", font2, (40, 140, 40), 770, 1000)
 
             pygame.display.flip()
 
