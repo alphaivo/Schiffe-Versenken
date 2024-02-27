@@ -5,8 +5,9 @@
 
 import pygame
 pygame.init()
-from Sekretaer import *
+from Sekretaer import Sekretaer
 from spielfeld import Spielfeld
+from time import sleep
 
 
 class Battleship:
@@ -17,6 +18,7 @@ class Battleship:
         self.__ships = [] # rectangles
         self.__ship_images = []
 
+        play_soundtrack()
         text = ""
         run = True
         troll = False
@@ -45,20 +47,38 @@ class Battleship:
                             self.__pcnummer = int(text)
                             run = False
 
-                        elif text.isnumeric() and int(text) == 42069:
+                        elif text.isnumeric() and (int(text) == 42069 or int(text) == 69420):
                             TROLL.play()
+                            self.__surface.blit(HEHEHEHA, (360,0))
+                            pygame.display.update()
+                            sleep(1)
 
                         else:
                             troll = True
-
 
                 if event.type == pygame.QUIT:
                     pygame.quit()
 
             pygame.display.update()
 
-        # !!! TO-DO:✓ 
+        screen.blit(LOADING_SCREEN, (0, 0))
+        pygame.draw.rect(self.__surface, (60, 70, 80), (100, 990, 1160, 130)) # alt:  y: 800, x: 380
+        draw_text('WARTE AUF GEGNER:  '+str(self.__pcnummer), font1, (40, 180, 40), 120, 1010) # alt:  y: 820, x: 400
+        pygame.display.update()
+
+        LOADING_START.play()
+        pygame.mixer.music.load('resources/beep.wav')
+        pygame.mixer.music.set_volume(1)
+        sleep(1)
+        pygame.mixer.music.play(-1)
+
+        #sleep(5)# test!!
         self.__sek = Sekretaer(self.__pcnummer)
+
+        pygame.mixer.music.stop()
+        LOADING_END.play()
+        sleep(1)
+        play_soundtrack()
 
     def aufbauPhase(self):
         def get_snapped_ship(snapship):
@@ -179,6 +199,8 @@ class Battleship:
                     if button.collidepoint(event.pos) and all_placed:
                         run = False
                         READY.play()
+                        draw_text('warte auf gegner...', font2, (40, 140, 40), 1100, 980)
+                        pygame.display.update()
                         self.__gsf.setzeSchiffe(self.__sek.kommuniziereSchiffe(self.__msf.gibSchiffe()))
 
                     if event.button == 1:
@@ -326,8 +348,6 @@ class Battleship:
             draw_window()
             draw_text('beschussphase', font2, (40, 100, 40), 720, 20)
 
-
-
             # draw ships
             for i in range(len(self.__ships)):
                 self.__surface.blit(self.__ship_images[i], self.__ships[i])
@@ -385,7 +405,17 @@ class Battleship:
                     run = False
 
                 if self.__msf.istFrei(gegnerZ):
+                    SHOT.play()
                     amZug = True
+                else:
+                    HIT.play()
+                    id = None
+                    for i in range(len(self.__msf.gibSchiffe())):
+                        for coord in self.__msf.gibSchiffe()[i]:
+                            if (gegnerZ[0], gegnerZ[1]) == coord:
+                                id = i
+                    if self.__msf.istVersenkt(id):
+                        SUNK.play()
 
             # Spielfelder
             self.__gsf.zeichneBrett()
@@ -408,12 +438,14 @@ class Battleship:
             clock.tick(45)
 
         if win:
+            sleep(0.7)
             VICTORY.play()
             while True:
                 self.__surface.blit(SIEG, (410, 50))
                 pygame.draw.rect(self.__surface, (155, 17, 30), (410, 75, 1100, 180))
                 draw_text('EPISCHER SIEG', font0, (255, 215, 0), 480, 100)
-                draw_text('spiel beenden: [esc]', font2, (0, 0, 0), 666, 1050)
+                draw_text('spiel beenden: [esc]', font2, (0, 0, 0), 666, 1000)
+                draw_text('neues spiel:  [enter]', font2, (0, 0, 0), 666, 1075)
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
                         pygame.quit()
@@ -421,15 +453,24 @@ class Battleship:
                     if event.type == pygame.KEYDOWN:
                         if event.key == pygame.K_ESCAPE:
                             pygame.quit()
+
+
+                        if event.key == pygame.K_RETURN:
+                            battle2 = Battleship(self.__surface)
+                            battle2.aufbauPhase()
+                            battle2.beschussPhase()
+
                 pygame.display.flip()
 
         else:
+            sleep(0.7)
             LOSS.play()
             while True:
                 self.__surface.blit(NIEDERLAGE, (410, 50))
                 pygame.draw.rect(self.__surface, (128, 128, 128), (560, 90, 815, 150))
                 draw_text('NIEDERLAGE', font0, (200, 70, 25), 570, 100)
-                draw_text('spiel beenden: [esc]', font2, (0, 0, 0), 666, 1050)
+                draw_text('spiel beenden: [esc]', font2, (0, 0, 0), 666, 1000)
+                draw_text('neues spiel:  [enter]', font2, (0, 0, 0), 666, 1075)
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
                         pygame.quit()
@@ -437,10 +478,14 @@ class Battleship:
                     if event.type == pygame.KEYDOWN:
                         if event.key == pygame.K_ESCAPE:
                             pygame.quit()
+
+                        if event.key == pygame.K_RETURN:
+                            battle2 = Battleship(self.__surface)
+                            battle2.aufbauPhase()
+                            battle2.beschussPhase()
+
                 pygame.display.flip()
 
-
-        
 
 # Ausgangsbildschirm
 n = 1 # Skalar; Standard ist 1; sonst 2
@@ -453,8 +498,11 @@ LETTERS_IMAGE = pygame.image.load('resources/letters.jpg')
 NUMBERS_IMAGE = pygame.image.load('resources/numbers.jpg')
 BACKGROUND_IMAGE = pygame.image.load('resources/background.jpg')
 BACKGROUND2_IMAGE = pygame.image.load('resources/background2.jpg')
+LOADINGSCREEN_IMAGE = pygame.image.load('resources/loadingscreen.jpg')
 SIEG_IMAGE = pygame.image.load('resources/sieg.jpg')
 NIEDERLAGE_IMAGE = pygame.image.load('resources/niederlage.jpg')
+HEHEHEHA = pygame.image.load('resources/heheheha.jpg')
+HEHEHEHA = pygame.transform.scale(HEHEHEHA, (1200, 1200))
 
 SHIP_SNAP = pygame.mixer.Sound('resources/ship_snap.wav')
 SHOT = pygame.mixer.Sound('resources/short_snap.wav')
@@ -464,27 +512,31 @@ VICTORY = pygame.mixer.Sound('resources/victory.mp3')
 LOSS = pygame.mixer.Sound('resources/fatality.mp3')
 READY = pygame.mixer.Sound('resources/ready.mp3')
 TROLL = pygame.mixer.Sound('resources/heheheha.mp3')
+LOADING_START = pygame.mixer.Sound('resources/loadingstart.wav')
+LOADING_END = pygame.mixer.Sound('resources/gamefound.wav')
 
 SHIP_SNAP.set_volume(0.5)
 SHOT.set_volume(0.5)
 HIT.set_volume(0.5)
 
 
-
-
 # background
+LOADING_SCREEN = pygame.transform.scale(LOADINGSCREEN_IMAGE, (1920/n, 1200/n))
 BACKGROUND = pygame.transform.scale(BACKGROUND_IMAGE, (1920/n, 1200/n))
 BACKGROUND2 = pygame.transform.scale(BACKGROUND2_IMAGE, (1920/n, 1200/n))
 SIEG = pygame.transform.scale(SIEG_IMAGE, (1100, 1100))
 NIEDERLAGE = pygame.transform.scale(NIEDERLAGE_IMAGE, (1100, 1100))
 
-pygame.mixer.music.load('resources/background.mp3')
-pygame.mixer.music.set_volume(0.01)
-pygame.mixer.music.play(-1)
 
 font0 = pygame.font.Font('resources/font.ttf', 130)
 font1 = pygame.font.Font('resources/font.ttf', 90)
 font2 = pygame.font.Font('resources/font.ttf', 55)
+
+
+def play_soundtrack():
+    pygame.mixer.music.load('resources/background.mp3')
+    pygame.mixer.music.set_volume(0.03)
+    pygame.mixer.music.play(-1)
 
 
 def draw_text(text, font, text_col, x, y):
@@ -515,3 +567,8 @@ battle = Battleship(screen)
 battle.aufbauPhase()
 battle.beschussPhase()
 
+
+# Quellen:
+# https://wallpapers.com/picture/battleship-pictures-c75lvd8kvyd3zcpv.html
+# https://wallpapers.com/picture/battleship-pictures-j5w3224835ro4189.html
+# https://freesound.org/
