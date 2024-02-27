@@ -322,10 +322,17 @@ class Battleship:
             draw_window()
             draw_text('beschussphase', font2, (40, 100, 40), 720, 20)
 
+
+
             # draw ships
             for i in range(len(self.__ships)):
                 self.__surface.blit(self.__ship_images[i], self.__ships[i])
                 pygame.draw.rect(self.__surface, "green", self.__ships[i], 1)  # optional
+
+            # Spielfelder
+            self.__gsf.zeichneBrett()
+
+            self.__msf.zeichneBrett()
 
 
 
