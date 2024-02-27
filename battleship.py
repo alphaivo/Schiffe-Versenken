@@ -175,9 +175,7 @@ class Battleship:
 
                     if button.collidepoint(event.pos) and all_placed:
                         run = False
-                        # !!! TO-DO:✓ 
-                        # - senden des eigenen Spielfelds an den Gegner
-                        # - empfangen des gegnerischen Spielfelds
+                        READY.play()
                         self.__gsf.setzeSchiffe(self.__sek.kommuniziereSchiffe(self.__msf.gibSchiffe()))
 
                     if event.button == 1:
@@ -218,7 +216,9 @@ class Battleship:
 
                                 if squares_free:
                                     ships[active_ship] = snapped_ship
-                                    self.__msf.setzeSchiff(old_ship_squares, new_ship_squares)  
+                                    self.__msf.setzeSchiff(old_ship_squares, new_ship_squares)
+                                    SHIP_SNAP.play()
+
                                 else: # redundancy
                                     if ships[active_ship].height <= 60:
                                         ship_images[active_ship] = pygame.transform.rotate(ship_images[active_ship], 90)
@@ -233,7 +233,6 @@ class Battleship:
                                     new_ship.topleft = ships[active_ship].topleft
                                     ships[active_ship] = new_ship
                                 ships[active_ship].topleft = ship_positions[active_ship]
-
 
                             active_ship = None
 
@@ -263,7 +262,9 @@ class Battleship:
                                     new_ship = ship_images[active_ship].get_rect()
                                     new_ship.topleft = ships[active_ship].topleft
                                     ships[active_ship] = new_ship
-                                    self.__msf.setzeSchiff(old_ship_squares, new_ship_squares)  
+                                    self.__msf.setzeSchiff(old_ship_squares, new_ship_squares)
+
+                                SHIP_SNAP.play()
 
                             active_ship = None
 
@@ -355,20 +356,21 @@ class Battleship:
                             self.__sek.sendeZug((x, y))
 
                             if not self.__gsf.istFrei((x, y)):
+                                HIT.play()
                                 id = None
                                 for i in range(len(self.__gsf.gibSchiffe())):
                                     for coord in self.__gsf.gibSchiffe()[i]:
                                         if (x, y) == coord:
                                             id = i
                                 if self.__gsf.istVersenkt(id):
-                                    # TO-DO: explosion sound effect
-                                    pass
+                                    SUNK.play()
 
                                 if self.__gsf.sindVersenkt():
                                     run = False
 
                             else:
                                 amZug = False
+                                SHOT.play()
 
             else:
                 draw_text("warte auf gegner...", font2, (40, 100, 40), 650, 1000)
@@ -403,6 +405,7 @@ class Battleship:
             clock.tick(45)
 
         if win:
+            VICTORY.play()
             while True:
                 self.__surface.blit(SIEG, (410, 50))
                 pygame.draw.rect(self.__surface, (155, 17, 30), (410, 75, 1100, 180))
@@ -418,6 +421,7 @@ class Battleship:
                 pygame.display.flip()
 
         else:
+            LOSS.play()
             while True:
                 self.__surface.blit(NIEDERLAGE, (410, 50))
                 pygame.draw.rect(self.__surface, (128, 128, 128), (560, 90, 815, 150))
@@ -449,11 +453,30 @@ BACKGROUND2_IMAGE = pygame.image.load('resources/background2.jpg')
 SIEG_IMAGE = pygame.image.load('resources/sieg.jpg')
 NIEDERLAGE_IMAGE = pygame.image.load('resources/niederlage.jpg')
 
+SHIP_SNAP = pygame.mixer.Sound('resources/ship_snap.wav')
+SHOT = pygame.mixer.Sound('resources/short_snap.wav')
+HIT = pygame.mixer.Sound('resources/hit.flac')
+SUNK = pygame.mixer.Sound('resources/explosion.wav')
+VICTORY = pygame.mixer.Sound('resources/victory.mp3')
+LOSS = pygame.mixer.Sound('resources/fatality.mp3')
+READY = pygame.mixer.Sound('resources/ready.mp3')
+
+SHIP_SNAP.set_volume(0.5)
+SHOT.set_volume(0.5)
+HIT.set_volume(0.5)
+
+
+
+
 # background
 BACKGROUND = pygame.transform.scale(BACKGROUND_IMAGE, (1920/n, 1200/n))
 BACKGROUND2 = pygame.transform.scale(BACKGROUND2_IMAGE, (1920/n, 1200/n))
 SIEG = pygame.transform.scale(SIEG_IMAGE, (1100, 1100))
 NIEDERLAGE = pygame.transform.scale(NIEDERLAGE_IMAGE, (1100, 1100))
+
+pygame.mixer.music.load('resources/background.mp3')
+pygame.mixer.music.set_volume(0.01)
+pygame.mixer.music.play(-1)
 
 font0 = pygame.font.Font('resources/font.ttf', 130)
 font1 = pygame.font.Font('resources/font.ttf', 90)
