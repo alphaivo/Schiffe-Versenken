@@ -2,7 +2,6 @@
 # Datum: 28.02.2024
 # Zweck: Hauptdatei des SWP und Klasse Battleship
 
-
 import pygame
 pygame.init()
 from Sekretaer import Sekretaer
@@ -103,7 +102,6 @@ class Battleship:
         sleep(1)
         pygame.mixer.music.play(-1)
 
-        sleep(2)# test!!
         self.__sek = Sekretaer(self.__pcnummer, heimspiel)
 
         pygame.mixer.music.stop()
@@ -228,9 +226,6 @@ class Battleship:
         run = True
         clock = pygame.time.Clock()
         while run:
-            draw_window()
-            draw_text('aufbauphase', font2, (40, 100, 40), 750, 20)
-
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
@@ -251,7 +246,7 @@ class Battleship:
                         run = False
                         READY.play()
                         draw_text('warte auf gegner...', font2, (40, 140, 40), 1100, 980)
-                        pygame.display.update()
+                        pygame.display.flip()
                         self.__gsf.setzeSchiffe(self.__sek.kommuniziereSchiffe(self.__msf.gibSchiffe()))
 
                     if event.button == 1:
@@ -348,6 +343,10 @@ class Battleship:
                     if (active_ship != None) and (not rotate_event):
                         ships[active_ship].move_ip(event.rel)
 
+            # UI
+            draw_window()
+            draw_text('aufbauphase', font2, (40, 100, 40), 750, 20)
+
             # grey outline
             if active_ship != None:
                 x1, y1 = ships[active_ship].topleft
@@ -427,6 +426,7 @@ class Battleship:
         win = True
         pygame.mouse.set_visible(False)
         while run:
+            draw_ui()
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -490,12 +490,8 @@ class Battleship:
 
                         
                 pygame.mouse.set_visible(False)
-                
-
-            
 
             draw_ui()
-            
 
             # grey outline
             x0, y0 = pygame.mouse.get_pos()
@@ -649,8 +645,6 @@ def draw_window():
     Erg.: -
     """
     screen.blit(BACKGROUND2, (0, 0))
-
-
 
     screen.blit(SPIELFELD, (192, 120))
     screen.blit(LETTERS, (132, 120))

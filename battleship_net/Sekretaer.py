@@ -2,9 +2,9 @@
 # Datum: 28.02.2024
 # Zweck: Klasse Sekretaer, Schnittstelle zu Kanaele
 
-from time import sleep #!! test
 from Kanaele import *
 from random import *
+
 
 class Sekretaer:
     """
@@ -14,20 +14,19 @@ class Sekretaer:
     Erg.: Eine Instanz der Klasse Sekretär ist geliefert.
     """
     def __init__(self, pcnummer:int, heimspiel:bool)->"Sekretaer":
-        if heimspiel:#
+        if heimspiel:
             self.__gegnerIP = str(pcnummer)# normale IP-Adressen#
-        else:#
-            self.__gegnerIP = "10.16.102." + str(pcnummer)#
-        self.__port = 55555#
-        self.__k = Kanaele(self.__gegnerIP,self.__port)#
+        else:
+            self.__gegnerIP = "10.16.102." + str(pcnummer)
+        self.__port = 55555
+        self.__k = Kanaele(self.__gegnerIP,self.__port)
 
-        #self.__erster = True #!! test
-        self.__erster = self.__k.erster()#
+        self.__erster = self.__k.erster()
         if self.__k.erster():#
-            self.__erster = randint(0,1) == 1#
-            self.__k.senden(str(not self.__erster))#
+            self.__erster = randint(0,1) == 1
+            self.__k.senden(str(not self.__erster))
         else:#
-            self.__erster = self.__k.empfangen() == 'True'#
+            self.__erster = self.__k.empfangen() == 'True'
         
 
     def gibErster(self)->bool:
@@ -47,14 +46,13 @@ class Sekretaer:
             stringS = stringS[:-1]
             stringS += "]"
         stringS = stringS[:-1]
-        self.__k.senden(stringS)#
+        self.__k.senden(stringS)
     
     def empfangeSchiffe(self)->[(int, int)]:
         """Vor.: -
         Eff.: Das Programm wird pausiert, bis der Gegner sendeSchiffe aufruft.
         Erg.: Eine Liste der gegnerischen Schiffen mit jeweils mehreren Koordinaten ist geliefert."""
-        stringS=self.__k.empfangen()#
-        #stringS = '7 5,7 6,7 7,7 8]9 4,9 5,9 6,9 7'#!! test
+        stringS=self.__k.empfangen()
         stringS = stringS.split(']')
         schiffe = []
         for schiff in stringS:
@@ -83,7 +81,7 @@ class Sekretaer:
         Eff.: Der Zug ist an den Gegner übermittelt, falls dieser ihn mit empfangeZug empfängt.
         Erg.: - """
         stringZ= str(zug[0]) + " " + str(zug[1])
-        self.__k.senden(stringZ)#
+        self.__k.senden(stringZ)
 
         
     
@@ -91,28 +89,15 @@ class Sekretaer:
         """Vor.: -
         Eff.: Das Programm wird pausiert, bis der Gegner sendeZug aufruft.
         Erg.: Der Zug des Gegners ist geliefert."""
-        stringZ = self.__k.empfangen()#
-        x,y = stringZ.split()#
-        return (int(x),int(y))#
-
-        #!! test:
-        #sleep(1)
-        #global zuege
-        #global z
-        #z += 1
-        #print(zuege[z])
-        #return zuege[z]
+        stringZ = self.__k.empfangen()
+        x,y = stringZ.split()
+        return (int(x),int(y))
 
     def quit(self):
         """Vor.: -
         Eff.: Der Kanal zum Gegner ist geschlossen.
         Erg.: -"""
-        self.__k.schliessen()#
-        #pass
+        self.__k.schliessen()
 
-#zuege= []
-#for i in range(5):
-    #for j in range(5):
-        #zuege.append((i,j))
-#z = -1
+
 
