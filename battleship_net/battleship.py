@@ -1,5 +1,5 @@
 # Autor: Ivaylo Staykov
-# Datum: 21.02.2024
+# Datum: 28.02.2024
 # Zweck: Hauptdatei des SWP und Klasse Battleship
 
 
@@ -24,23 +24,39 @@ class Battleship:
         self.__ships = [] # rectangles
         self.__ship_images = []
 
+        def validate_ip(s:str):
+            """returns True if -s- is a valid IPv4-Address, else False"""
+            a = s.split('.')
+            if len(a) != 4:
+                return False
+            for x in a:
+                if not x.isdigit():
+                    return False
+                i = int(x)
+                if i < 0 or i > 255:
+                    return False
+            return True
+
         play_soundtrack()
         text = ""
         run = True
         troll = False
         pygame.mouse.set_visible(True)
+        heimspiel = False
         while run:
             screen.blit(BACKGROUND, (0, 0))
             draw_text('Schiffe Versenken', font0, (40, 140, 40), 320, 200)
             draw_text('pc-nummer des gegners:', font2, (40, 140, 40), 540, 600)
+            draw_text('(bzw. ip-adresse)', font2, (40, 140, 40), 540, 670)
+
             draw_text(text, font2, (40, 140, 40), 1320, 600)
             if troll:
-                draw_text('unbekannte pc-nummer', font2, (40, 140, 40), 540, 800)
-                draw_text('bitte versuche erneut', font2, (40, 140, 40), 540, 880)
+                draw_text('unbekannte pc-nummer bzw. ip-adresse', font2, (40, 140, 40), 400, 900)
+                draw_text('bitte versuche es erneut [backspace]', font2, (40, 140, 40), 400, 980)
             for event in pygame.event.get():
                 # handle text input
                 if event.type == pygame.TEXTINPUT:
-                    if len(text) < 5:
+                    if len(text) < 15:
                         text += event.text
 
                 if event.type == pygame.KEYDOWN:
@@ -60,6 +76,11 @@ class Battleship:
                             pygame.display.update()
                             sleep(1)
 
+                        elif validate_ip(text):
+                            self.__pcnummer = text
+                            heimspiel = True
+                            run = False
+
                         else:
                             troll = True
 
@@ -69,7 +90,10 @@ class Battleship:
             pygame.display.update()
 
         screen.blit(LOADING_SCREEN, (0, 0))
-        pygame.draw.rect(self.__surface, (60, 70, 80), (100, 990, 1160, 130)) # alt:  y: 800, x: 380
+        if heimspiel:
+            pygame.draw.rect(self.__surface, (60, 70, 80), (100, 990, 1750, 130)) # alt:  y: 800, x: 380
+        else:
+            pygame.draw.rect(self.__surface, (60, 70, 80), (100, 990, 1160, 130))  # alt:  y: 800, x: 380
         draw_text('WARTE AUF GEGNER:  '+str(self.__pcnummer), font1, (40, 180, 40), 120, 1010) # alt:  y: 820, x: 400
         pygame.display.update()
 
@@ -80,7 +104,7 @@ class Battleship:
         pygame.mixer.music.play(-1)
 
         sleep(2)# test!!
-        self.__sek = Sekretaer(self.__pcnummer)
+        self.__sek = Sekretaer(self.__pcnummer, heimspiel)
 
         pygame.mixer.music.stop()
         LOADING_END.play()
@@ -378,7 +402,7 @@ class Battleship:
         def draw_ui():
             """
             Vor.: -
-            Eff.: Das Spielfeld, inklusive ist auf dem Bildschirm gemalt, jedoch nicht angezeigt.
+            Eff.: Das Spielfeld, inklusive Schiffe und beschossene Felder ist auf dem Bildschirm gemalt, jedoch nicht angezeigt.
             Erg.: -
             """
             # draw ui
@@ -486,10 +510,11 @@ class Battleship:
             #Hinweis für user
             if amZug:
                 draw_text("feuer frei!", font2, (40, 140, 40), 770, 1000)
+                # crosshair
+                cros_x, cros_y = x0 - 25, y0 - 25
+                self.__surface.blit(CROSSHAIR, (cros_x, cros_y))
 
-            #crosshair
-            cros_x, cros_y = x0-25, y0-25
-            self.__surface.blit(CROSSHAIR, (cros_x, cros_y))
+
             
             pygame.display.flip()
 
@@ -545,9 +570,19 @@ class Battleship:
                 pygame.display.flip()
 
 
+def play_soundtrack():
+    """
+    Vor.: -
+    Eff.: Die Hintergrundmusik ist in Dauerschleife mit 10% Lautstärke abgespielt.
+    Erg.: -
+    """
+    pygame.mixer.music.load('resources/background.mp3')
+    pygame.mixer.music.set_volume(0.1)
+    pygame.mixer.music.play(-1)
+
+
 # Ausgangsbildschirm
-n = 1 # Skalar; Standard ist 1; sonst 2
-screen = pygame.display.set_mode((1920/n, 1200/n))
+screen = pygame.display.set_mode((1920, 1200))
 pygame.display.set_caption("Schiffe Versenken")
 
 # load resources
@@ -563,6 +598,10 @@ HEHEHEHA = pygame.image.load('resources/heheheha.jpg')
 HEHEHEHA = pygame.transform.scale(HEHEHEHA, (1200, 1200))
 CROSSHAIR_IMAGE = pygame.image.load('resources/crosshair3.png').convert_alpha()
 CROSSHAIR = pygame.transform.scale(CROSSHAIR_IMAGE, (50, 50))
+
+SPIELFELD = pygame.transform.scale(SPIELFELD_IMAGE, (601, 601))
+LETTERS = pygame.transform.scale(LETTERS_IMAGE, (60, 601))
+NUMBERS = pygame.transform.scale(NUMBERS_IMAGE, (601, 60))
 
 SHIP_SNAP = pygame.mixer.Sound('resources/ship_snap.wav')
 SHOT = pygame.mixer.Sound('resources/short_snap.wav')
@@ -581,9 +620,9 @@ HIT.set_volume(0.5)
 
 
 # background
-LOADING_SCREEN = pygame.transform.scale(LOADINGSCREEN_IMAGE, (1920/n, 1200/n))
-BACKGROUND = pygame.transform.scale(BACKGROUND_IMAGE, (1920/n, 1200/n))
-BACKGROUND2 = pygame.transform.scale(BACKGROUND2_IMAGE, (1920/n, 1200/n))
+LOADING_SCREEN = pygame.transform.scale(LOADINGSCREEN_IMAGE, (1920, 1200))
+BACKGROUND = pygame.transform.scale(BACKGROUND_IMAGE, (1920, 1200))
+BACKGROUND2 = pygame.transform.scale(BACKGROUND2_IMAGE, (1920, 1200))
 SIEG = pygame.transform.scale(SIEG_IMAGE, (1100, 1100))
 NIEDERLAGE = pygame.transform.scale(NIEDERLAGE_IMAGE, (1100, 1100))
 
@@ -593,33 +632,35 @@ font1 = pygame.font.Font('resources/font.ttf', 90)
 font2 = pygame.font.Font('resources/font.ttf', 55)
 
 
-def play_soundtrack():
-    pygame.mixer.music.load('resources/background.mp3')
-    pygame.mixer.music.set_volume(0.2)
-    pygame.mixer.music.play(-1)
-
-
-def draw_text(text, font, text_col, x, y):
+def draw_text(text: str, font: pygame.font, text_col: pygame.color, x:int, y:int):
+    """
+    Vor.:  Die pygame Surface "screen" ist bereits initialsiert.
+    Eff.:  Der string -text- ist in der Schriftart -font-, in der Farbe -text_col- bei den Bildschirmkoordinaten x, y gemalt.
+    Erg.: -
+    """
     img = font.render(text, True, text_col)
     screen.blit(img, (x, y))
 
 
 def draw_window():
+    """
+    Vor.:  Die pygame Surface "screen" und die benötigten Bilder sind bereits initialsiert.
+    Eff.:  Der string -text- ist in der Schriftart -font-, in der Farbe -text_col- bei den Bildschirmkoordinaten x, y gemalt.
+    Erg.: -
+    """
     screen.blit(BACKGROUND2, (0, 0))
 
-    SPIELFELD = pygame.transform.scale(SPIELFELD_IMAGE, (601 / n, 601 / n))
-    LETTERS = pygame.transform.scale(LETTERS_IMAGE, (60 / n, 601 / n))
-    NUMBERS = pygame.transform.scale(NUMBERS_IMAGE, (601 / n, 60 / n))
 
-    screen.blit(SPIELFELD, (192 / n, 120 / n))
-    screen.blit(LETTERS, (132 / n, 120 / n))
-    screen.blit(NUMBERS, (192 / n, 721 / n))
-    draw_text('heim', font1, (40, 140, 40), 370 / n, 20 / n)
 
-    screen.blit(SPIELFELD, (1127 / n, 120 / n))
-    screen.blit(LETTERS, (1067 / n, 120 / n))
-    screen.blit(NUMBERS, (1127 / n, 721 / n))
-    draw_text('feind', font1, (40, 140, 40), 1300 / n, 20 / n)
+    screen.blit(SPIELFELD, (192, 120))
+    screen.blit(LETTERS, (132, 120))
+    screen.blit(NUMBERS, (192, 721))
+    draw_text('heim', font1, (40, 140, 40), 370, 20)
+
+    screen.blit(SPIELFELD, (1127, 120))
+    screen.blit(LETTERS, (1067, 120))
+    screen.blit(NUMBERS, (1127, 721))
+    draw_text('feind', font1, (40, 140, 40), 1300, 20)
 
 
 # Hauptspielphase

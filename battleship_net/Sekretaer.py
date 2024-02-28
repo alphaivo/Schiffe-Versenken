@@ -1,5 +1,5 @@
 # Autor: Gustav Freitag
-# Datum: 25.02.2024
+# Datum: 28.02.2024
 # Zweck: Klasse Sekretaer, Schnittstelle zu Kanaele
 
 from time import sleep #!! test
@@ -7,22 +7,27 @@ from Kanaele import *
 from random import *
 
 class Sekretaer:
-    """Vor.: -pcnummer- ist die PC-Nummer des Gegners im Raum A124. Die Module Random und Kanaele sind importiert.
-        Eff.: Eine Kanal mit dem Gegner ist nun aufgebaut. Die gegnerische IP und der Port des Kanals ist gespeichert. Außerdem ist festgelegt, ob der Spieler anfängt.
-        Erg.: Eine Instanz der Klasse Sekretär ist geliefert."""
-    def __init__(self,pcnummer:int)->"Sekretaer":
-        #self.__gegnerIP = "192.168.1." + str(pcnummer)# normale IP-Adressen
-        #self.__gegnerIP = "10.16.102." + str(pcnummer)#
-        #self.__port = 55555#
-        #self.__k = Kanaele(self.__gegnerIP,self.__port)#
+    """
+    Vor.: -heimspiel- ist ein Boolean und False wenn in der Schule gespielt werden soll, sonst True. -pcnummer- ist die PC-Nummer des Gegners im Raum A124 bzw.
+    die IP-Adresse des gegnerischen PCs. Die Module Random und Kanaele sind importiert.
+    Eff.: Eine Kanal mit dem Gegner ist nun aufgebaut. Die gegnerische IP und der Port des Kanals ist gespeichert. Außerdem ist festgelegt, ob der Spieler anfängt.
+    Erg.: Eine Instanz der Klasse Sekretär ist geliefert.
+    """
+    def __init__(self, pcnummer:int, heimspiel:bool)->"Sekretaer":
+        if heimspiel:#
+            self.__gegnerIP = str(pcnummer)# normale IP-Adressen#
+        else:#
+            self.__gegnerIP = "10.16.102." + str(pcnummer)#
+        self.__port = 55555#
+        self.__k = Kanaele(self.__gegnerIP,self.__port)#
 
-        self.__erster = True #!! test
-        #self.__erster = self.__k.erster()#
-        #if self.__k.erster():
-            #self.__erster = randint(0,1) == 1
-            #self.__k.senden(str(not self.__erster))
-        #else:
-            #self.__erster = self.__k.empfangen() == 'True'
+        #self.__erster = True #!! test
+        self.__erster = self.__k.erster()#
+        if self.__k.erster():#
+            self.__erster = randint(0,1) == 1#
+            self.__k.senden(str(not self.__erster))#
+        else:#
+            self.__erster = self.__k.empfangen() == 'True'#
         
 
     def gibErster(self)->bool:
@@ -32,6 +37,9 @@ class Sekretaer:
         return self.__erster
 
     def sendeSchiffe(self,schiffe:[(int, int)]):
+        """Vor.: -schiffe- ist eine Liste von Listen von Tupeln (x,y) mit Koordinaten vom Typ int.
+        Eff.: -schiffe- ist an den Gegner übermittelt, wenn dieser empfangeSchiffe aufruft.
+        Erg.: -"""
         stringS = ""
         for schiff in schiffe:
             for coord in schiff:
@@ -39,11 +47,14 @@ class Sekretaer:
             stringS = stringS[:-1]
             stringS += "]"
         stringS = stringS[:-1]
-        #self.__k.senden(stringS)#
+        self.__k.senden(stringS)#
     
     def empfangeSchiffe(self)->[(int, int)]:
-        #stringS=self.__k.empfangen()#
-        stringS = '7 5,7 6,7 7,7 8]9 4,9 5,9 6,9 7'#!! test
+        """Vor.: -
+        Eff.: Das Programm wird pausiert, bis der Gegner sendeSchiffe aufruft.
+        Erg.: Eine Liste der gegnerischen Schiffen mit jeweils mehreren Koordinaten ist geliefert."""
+        stringS=self.__k.empfangen()#
+        #stringS = '7 5,7 6,7 7,7 8]9 4,9 5,9 6,9 7'#!! test
         stringS = stringS.split(']')
         schiffe = []
         for schiff in stringS:
@@ -56,6 +67,9 @@ class Sekretaer:
         return schiffe
                 
     def kommuniziereSchiffe(self,schiffe:[(int, int)])->[(int, int)]:
+        """Vor.: -schiffe- ist eine Liste von Listen von Tupeln (x,y) mit Koordinaten von jedem Schiff der eigenen Flotte.
+        Eff.: -schiffe- ist an den Gegner übermittelt, das Programm wird pausiert, bis der Gegner ebenfalls kommuniziereSchiffe aufruft.
+        Erg.: Eine Liste der gegnerischen Schiffen mit jeweiligen mehreren Koordinaten ist geliefert."""
         if self.__erster:
             self.sendeSchiffe(schiffe)
             return self.empfangeSchiffe()
@@ -65,32 +79,40 @@ class Sekretaer:
             return gegnerSchiffe
 
     def sendeZug(self,zug:(int,int)):
+        """Vor.: -zug- ist ein Tuple bestehend aus x- und y-Koordinate. x und y sind vom Typ int.
+        Eff.: Der Zug ist an den Gegner übermittelt, falls dieser ihn mit empfangeZug empfängt.
+        Erg.: - """
         stringZ= str(zug[0]) + " " + str(zug[1])
-        #self.__k.senden(stringZ)#
+        self.__k.senden(stringZ)#
 
         
     
     def empfangeZug(self)->(int,int):
-        #stringZ = self.__k.empfangen()#
-        #x,y = stringZ.split()#
-        #return (int(x),int(y))#
+        """Vor.: -
+        Eff.: Das Programm wird pausiert, bis der Gegner sendeZug aufruft.
+        Erg.: Der Zug des Gegners ist geliefert."""
+        stringZ = self.__k.empfangen()#
+        x,y = stringZ.split()#
+        return (int(x),int(y))#
 
         #!! test:
-        sleep(1)
-        global zuege
-        global z
-        z += 1
-        print(zuege[z])
-        return zuege[z]
+        #sleep(1)
+        #global zuege
+        #global z
+        #z += 1
+        #print(zuege[z])
+        #return zuege[z]
 
     def quit(self):
-        #self.__k.schliessen()#
-        pass#
+        """Vor.: -
+        Eff.: Der Kanal zum Gegner ist geschlossen.
+        Erg.: -"""
+        self.__k.schliessen()#
+        #pass
 
-zuege= []
-for i in range(5):
-    for j in range(5):
-        zuege.append((i,j))
-z = -1
-#schiffe = [[(1,0),(2,0),(3,0)],[(4,4),(4,5),(4,6)]]
-#print(empfangeSchiffe(sendeSchiffe(schiffe)))
+#zuege= []
+#for i in range(5):
+    #for j in range(5):
+        #zuege.append((i,j))
+#z = -1
+

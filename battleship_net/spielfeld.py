@@ -1,14 +1,17 @@
-#21.02.2024
-#Gustav Freitag
-#Klasse Spielfeld
+# Autor: Gustav Freitag
+# Datum: 21.02.2024
+# Zweck: Klasse Spielfeld
 
 import pygame
-#import Schiffe
+
 
 class Spielfeld:
+    """Vor.: -pos- ist eine Position (x,y) auf dem Bildschirm. -surface- ist die Surface der Anwendung.
+    Eff.: Das Spielfeld ist leer und hat die Größe 600.
+    Erg.: Eine Instanz der Klasse spielfeld ist geliefert."""
     def __init__(self,pos:(int,int),surface)->"Spielfeld":
         self.__surface = surface
-        self.__groeße = 600//1
+        self.__groeße = 600
         self.__pos = pos
         self.__felder = [[(0,0) for i in range(10)]for j in range(10)]  #(a,b): a-Schiff da?, b-bereits beschossen?
         self.__schiffe = []
@@ -28,22 +31,28 @@ class Spielfeld:
         self.__sunken_ship_images = [SHIP1, SHIP2, SHIP3, SHIP4]
 
     def gibPos(self)-> (int,int):
+        """Vor.: -
+        Eff.: -
+        Erg.: Die Position des Bretts ist geliefert (oben, links)."""
         return self.__pos
 
     def beschieße(self,feld:(int,int)):
+        """Vor.: -feld- ist eine Koordinate auf dem Spielbrett.
+        Eff.: Das Feld ist mit der Koordinate -feld- ist als beschossen abgespeichert.
+        Erg.: -"""
         a = self.__felder[feld[0]][feld[1]][0]
         self.__felder[feld[0]][feld[1]] = (a,1)
 
-    def istFrei(self,feld:(int,int))->bool: 
-        #frei = True
-        #for i in range(feld[0]-1,feld[0]+1):
-        #    for j in range(feld[1]-1,feld[1]+1):
-        #        if self.__felder[i][j][0]==1:
-        #            frei = False
-        #return frei
+    def istFrei(self,feld:(int,int))->bool:
+        """Vor.: -feld- ist eine Koordinate auf dem Spielbrett.
+        Eff.: -
+        Erg.: Es ist geliefert, ob das Feld mit den Koordinaten -feld- frei ist."""
         return self.__felder[feld[0]][feld[1]][0]==0
         
     def zeichneBrett(self):
+        """Vor.: -
+        Eff.: Das Spielbrett ist auf dem Bildschirm gezeichnet, jedoch nicht angezeigt.
+        Erg.: -"""
         x, y = self.__pos
 
         length = len(self.__schiffe)
@@ -92,14 +101,10 @@ class Spielfeld:
                                          (x + i * self.__groeße / 10 + 3, y + (j + 1) * self.__groeße / 10 - 3), 7)
 
 
-
-
-        #pygame.display.update() # quatsch und schwachsinn
-
-    def zeichneRandSchiffe(self):
-        pass
-
-    def setzeSchiffe(self,schiffe:[[(int,int)]]): 
+    def setzeSchiffe(self,schiffe:[[(int,int)]]):
+        """Vor.: -schiffe- ist eine Liste mit Listen von Koordinaten der Schiffe. Das Spielfeld ist leer.
+        Eff.: Die Positionen der Schiffe sind abgespeichert.
+        Erg.: -"""
         self.__felder = [[(0,0) for i in range(10)]for j in range(10)]
         for schiff in schiffe:
             for x,y in schiff:
@@ -107,6 +112,9 @@ class Spielfeld:
         self.__schiffe = schiffe
 
     def setzeSchiff(self, alt_schiff:[(int, int)], neu_schiff:[(int, int)]):
+        """Vor.: -alt_schiff- ist eine Liste der Koordinaten eines Schiffes, -neu_schiff- ist ebenfalls eine Liste mit Koordinaten.
+        Eff.: Das Schiff liegt nun auf den Koordinaten -neu_schiff-, die Koordinaten -alt_schiff- sind leer.
+        Erg.: -"""
         if alt_schiff:
             for x, y in alt_schiff:
                 self.__felder[x][y] = (0, 0)
@@ -120,39 +128,26 @@ class Spielfeld:
 
 
     def gibSchiffe(self)->[[(int,int)]]:
+        """Vor.: -
+        Eff.: -
+        Erg.: Eine Liste mit Listen der Koordinaten aller Schiffe ist geliefert."""
         return self.__schiffe
 
     def sindVersenkt(self)->bool:
+        """Vor.: -
+        Eff.: -
+        Erg.: Es ist geliefert, ob alle Schiffe auf dem Spielbrett versenkt sind."""
         for schiff in self.__schiffe:
-            for coord in schiff: # maybe replace with lesser function
+            for coord in schiff:
                 if self.__felder[coord[0]][coord[1]][1] == 0:
                     return False
         return True
 
     def istVersenkt(self, id:int)->bool:
+        """Vor.: -id- ist eine natürliche Zahl kleiner oder gleich 4.
+        Eff.: -
+        Erg.: Es ist geliefert, ob das Schiff mit der Id -id- versenkt ist."""
         for coord in self.__schiffe[id]:
             if self.__felder[coord[0]][coord[1]][1] == 0:
                 return False
         return True
-
-
-    
-#screen = pygame.display.set_mode((1920/2,1200/2))
-#s = Spielfeld((192/2,120/2),screen)
-#s.beschieße((0,0))
-#s.beschieße((0,1))
-#print(s.istFrei((1,1)))
-#s.zeichneBrett()
-#pygame.display.flip()
-
-#screen = pygame.display.set_mode((1920, 1200))
-#s = Spielfeld((192, 120), screen)
-#s.setzteSchiff([(0, 1), (1, 1), (2, 1)])
-
-
-'''felder = [[(0,0) for i in range(10)]for j in range(10)]
-feld = (0,0)
-a = felder[feld[0]][feld[1]][0]
-felder[feld[0]][feld[1]] = (a,1)
-print(felder)
-'''
