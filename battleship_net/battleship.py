@@ -79,7 +79,7 @@ class Battleship:
         sleep(1)
         pygame.mixer.music.play(-1)
 
-        #sleep(5)# test!!
+        sleep(2)# test!!
         self.__sek = Sekretaer(self.__pcnummer)
 
         pygame.mixer.music.stop()
@@ -375,14 +375,13 @@ class Battleship:
             y = y // (60 // 1)
             return x, y
 
-        clicked = []
-
-        clock = pygame.time.Clock()
-        amZug = self.__sek.gibErster()
-        run = True
-        win = True
-        pygame.mouse.set_visible(False)
-        while run:         
+        def draw_ui():
+            """
+            Vor.: -
+            Eff.: Das Spielfeld, inklusive ist auf dem Bildschirm gemalt, jedoch nicht angezeigt.
+            Erg.: -
+            """
+            # draw ui
             draw_window()
             draw_text('beschussphase', font2, (40, 100, 40), 720, 20)
 
@@ -396,9 +395,14 @@ class Battleship:
 
             self.__msf.zeichneBrett()
 
-            
+        clicked = []
 
-
+        clock = pygame.time.Clock()
+        amZug = self.__sek.gibErster()
+        run = True
+        win = True
+        pygame.mouse.set_visible(False)
+        while run:
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -434,8 +438,11 @@ class Battleship:
                             else:
                                 amZug = False
                                 SHOT.play()
+                            
+                    
 
             else:
+                pygame.mouse.set_visible(True)
                 draw_text("warte auf gegner...", font2, (40, 100, 40), 650, 1000)
                 pygame.display.flip()
                 gegnerZ = self.__sek.empfangeZug()
@@ -457,36 +464,38 @@ class Battleship:
                     if self.__msf.istVersenkt(id):
                         SUNK.play()
 
-            # Spielfelder
-            self.__gsf.zeichneBrett()
+                        
+                pygame.mouse.set_visible(False)
+                
 
-            self.__msf.zeichneBrett()
+            
+
+            draw_ui()
+            
 
             # grey outline
             x0, y0 = pygame.mouse.get_pos()
             x, y = get_coords((x0, y0))
+            
             if x in range(10) and y in range(10):
+                
                 if not ((x, y) in clicked) and amZug:
                     square = pygame.Rect(1127 // 1 + x * 60 + 1, 120 // 1 + y * 60 + 1, 58, 58)  # //2 bzw. 30 bzw. 28 bei kleinerem Bildschirm
                     pygame.draw.rect(self.__surface, (50, 50, 50), square)
 
+            #Hinweis für user
             if amZug:
                 draw_text("feuer frei!", font2, (40, 140, 40), 770, 1000)
 
-
-
-            #crosshair:
-            pos = pygame.mouse.get_pos()
-            x, y = pos[0], pos[1]
-            x-= 30
-            y -= 30
-            self.__surface.blit(CROSSHAIR, (x, y))
+            #crosshair
+            cros_x, cros_y = x0-25, y0-25
+            self.__surface.blit(CROSSHAIR, (cros_x, cros_y))
             
             pygame.display.flip()
 
             clock.tick(45)
 
-        if not win:
+        if win:
             sleep(0.7)
             VICTORY.play()
             pygame.mouse.set_visible(True)
@@ -552,8 +561,8 @@ SIEG_IMAGE = pygame.image.load('resources/sieg.jpg')
 NIEDERLAGE_IMAGE = pygame.image.load('resources/niederlage.jpg')
 HEHEHEHA = pygame.image.load('resources/heheheha.jpg')
 HEHEHEHA = pygame.transform.scale(HEHEHEHA, (1200, 1200))
-CROSSHAIR_IMAGE = pygame.image.load('resources/crosshair.png').convert_alpha()
-CROSSHAIR = pygame.transform.scale(CROSSHAIR_IMAGE, (60, 60))
+CROSSHAIR_IMAGE = pygame.image.load('resources/crosshair3.png').convert_alpha()
+CROSSHAIR = pygame.transform.scale(CROSSHAIR_IMAGE, (50, 50))
 
 SHIP_SNAP = pygame.mixer.Sound('resources/ship_snap.wav')
 SHOT = pygame.mixer.Sound('resources/short_snap.wav')
