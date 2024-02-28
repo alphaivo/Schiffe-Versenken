@@ -4,17 +4,30 @@
 
 from time import sleep #!! test
 from Kanaele import *
+from random import *
 
 class Sekretaer:
+    """Vor.: -pcnummer- ist die PC-Nummer des Gegners im Raum A124. Die Module Random und Kanaele sind importiert.
+        Eff.: Eine Kanal mit dem Gegner ist nun aufgebaut. Die gegnerische IP und der Port des Kanals ist gespeichert. Außerdem ist festgelegt, ob der Spieler anfängt.
+        Erg.: Eine Instanz der Klasse Sekretär ist geliefert."""
     def __init__(self,pcnummer:int)->"Sekretaer":
-        #self.__gegnerIP = "192.168.1." + str(pcnummer)#
+        #self.__gegnerIP = "192.168.1." + str(pcnummer)# normale IP-Adressen
         self.__gegnerIP = "10.16.102." + str(pcnummer)#
         self.__port = 55555#
         self.__k = Kanaele(self.__gegnerIP,self.__port)#
+        
         self.__erster = self.__k.erster()#
+        if self.__k.erster():
+            self.__erster = randint(0,1) == 1
+            self.__k.senden(str(not self.__erster))
+        else:
+            self.__erster = self.__k.empfangen() == 'True'
         #self.__erster = True #!! test
 
     def gibErster(self)->bool:
+        """Vor.: -
+        Eff.: -
+        Erg.: Es ist geliefert, ob der Spieler beginnt."""
         return self.__erster
 
     def sendeSchiffe(self,schiffe:[(int, int)]):
@@ -34,7 +47,6 @@ class Sekretaer:
         schiffe = []
         for schiff in stringS:
             schiff = schiff.split(',')
-            print(schiff)
             s=[]
             for cord in schiff:
                 x,y = cord.split()
@@ -69,6 +81,9 @@ class Sekretaer:
         #z += 1
         #print(zuege[z])
         #return zuege[z]
+
+    def quit(self):
+        self.__k.schliessen()
 
 #zuege= []
 #for i in range(5):

@@ -11,7 +11,13 @@ from time import sleep
 
 
 class Battleship:
-    def __init__(self, surface):
+    """
+    Vor.: pygame ist installiert; -surface- ist ein Objekt vom Typ Surface und hat die Höhe 1200px und Breite 1920px.
+          Die Module time, Sekretaer, Spielfeld und pygame sind importiert.
+    Eff.: Der Startbildschirm des Spieles ist im Vollbilschirm geöffnet. Das Spiel geht los.
+    Erg.: Eine Instantz der Klasse Battleship ist geliefert.
+    """
+    def __init__(self, surface:pygame.Surface)->"Battleship":
         self.__surface = surface
         self.__msf = Spielfeld((192//1, 120//1), self.__surface)  # //2 for smaller display
         self.__gsf = Spielfeld((1127//1, 120//1), self.__surface) # --------"---------
@@ -22,6 +28,7 @@ class Battleship:
         text = ""
         run = True
         troll = False
+        pygame.mouse.set_visible(True)
         while run:
             screen.blit(BACKGROUND, (0, 0))
             draw_text('Schiffe Versenken', font0, (40, 140, 40), 320, 200)
@@ -43,7 +50,7 @@ class Battleship:
                         text = text[:-1]
 
                     elif event.key == pygame.K_RETURN:
-                        if text.isnumeric() and (1 <= int(text) <= 60):
+                        if text.isnumeric() and (1 <= int(text) <= 22):
                             self.__pcnummer = int(text)
                             run = False
 
@@ -81,7 +88,17 @@ class Battleship:
         play_soundtrack()
 
     def aufbauPhase(self):
-        def get_snapped_ship(snapship):
+        """
+        Vor.: Die Methode aufbauPhase ist vor der Methode beschussPhase aufgerufen.
+        Eff.: Die Aufbauphase des Spiels beginnt.
+        Erg.: -
+        """
+        def get_snapped_ship(snapship:pygame.Rect)->pygame.Rect:
+            """
+            Vor.: -snapship- ist Objekt des Typs Rechteck und repräsentiert ein Schiff und ist größtenteils innerhalb des Spielfelds.
+            Eff.: -
+            Erg.: -snapship- ist mit angepassten Koordinaten für das Spielgitter geliefert.
+            """
             x, y = snapship.center
             if (snapship.height != 240) and (snapship.width != 240):
                 snap_x = (x - 192) // 60  # //30 for smaller displays
@@ -97,7 +114,12 @@ class Battleship:
                 snapship.center = 252 + (snap_x) * 60, 150 + (snap_y) * 60
             return snapship
 
-        def get_border_coordinates(rectangle_coords):
+        def get_border_coordinates(rectangle_coords:[(int,int)])->[(int,int)] :
+            """
+            Vor.: -rectangle_coords- ist eine Liste der Koordinaten von Spielfeldern, dessen Nachbarn berechnet werden sollen.
+            Eff.: -
+            Erg.: Eine Liste der Koordinaten aller Spielfelder und ihrer Nachbarn ist geliefert.
+            """
             border_coords = set()
             for x, y in rectangle_coords:
                 # Check the top, bottom, left, and right neighbors
@@ -116,6 +138,11 @@ class Battleship:
             return list(border_coords)
 
         def get_ship_squares(ship):
+            """
+            Vor.: -ship- ist Objekt des Typs Rechteck und repräsentiert ein Schiff und befindet sich auf dem Spielfeld.
+            Eff.: -
+            Erg.: Eine Liste der Koordinaten aller Spielfelder des Schiffs ist geliefert.
+            """
             ship_squares = []
             x0, y0 = ship.topleft
             x_pos, y_pos = (x0 - 192) // 60, (y0 - 120) // 60
@@ -328,9 +355,19 @@ class Battleship:
         self.__ships = ships
         self.__ship_images = ship_images
 
-    def beschussPhase(self):
+    def beschussPhase(self)->bool:
+        """
+        Vor.: Die Methode beschussPhase ist nach der Methode aufbauPhase aufgerufen.
+        Eff.: Die Beschussphase des Spiels beginnt.
+        Erg.: Wenn noch gespielt werden soll wird True geliefert, sonst nichts.
+        """
 
         def get_coords(coords):  #//2 for smaller display
+            """
+            Vor.: -coords- ist ein Tupel mit den Koordinaten der Maus. Die Maus befindet sich über dem gegnerischen Spielfeld
+            Eff.: -
+            Erg.: Die Koordinaten des Spielfelds über welchem sich die Maus befindet ist als Tupel geliefert.
+            """
             x, y = coords[0], coords[1]
             x -= 1127//1
             y -= 120//1
@@ -344,7 +381,8 @@ class Battleship:
         amZug = self.__sek.gibErster()
         run = True
         win = True
-        while run:
+        pygame.mouse.set_visible(False)
+        while run:         
             draw_window()
             draw_text('beschussphase', font2, (40, 100, 40), 720, 20)
 
@@ -357,6 +395,8 @@ class Battleship:
             self.__gsf.zeichneBrett()
 
             self.__msf.zeichneBrett()
+
+            
 
 
 
@@ -433,13 +473,23 @@ class Battleship:
             if amZug:
                 draw_text("feuer frei!", font2, (40, 140, 40), 770, 1000)
 
+
+
+            #crosshair:
+            pos = pygame.mouse.get_pos()
+            x, y = pos[0], pos[1]
+            x-= 30
+            y -= 30
+            self.__surface.blit(CROSSHAIR, (x, y))
+            
             pygame.display.flip()
 
             clock.tick(45)
 
-        if win:
+        if not win:
             sleep(0.7)
             VICTORY.play()
+            pygame.mouse.set_visible(True)
             while True:
                 self.__surface.blit(SIEG, (410, 50))
                 pygame.draw.rect(self.__surface, (155, 17, 30), (410, 75, 1100, 180))
@@ -456,15 +506,15 @@ class Battleship:
 
 
                         if event.key == pygame.K_RETURN:
-                            battle2 = Battleship(self.__surface)
-                            battle2.aufbauPhase()
-                            battle2.beschussPhase()
+                            self.__sek.quit()
+                            return True
 
                 pygame.display.flip()
 
         else:
             sleep(0.7)
             LOSS.play()
+            pygame.mouse.set_visible(True)
             while True:
                 self.__surface.blit(NIEDERLAGE, (410, 50))
                 pygame.draw.rect(self.__surface, (128, 128, 128), (560, 90, 815, 150))
@@ -480,9 +530,8 @@ class Battleship:
                             pygame.quit()
 
                         if event.key == pygame.K_RETURN:
-                            battle2 = Battleship(self.__surface)
-                            battle2.aufbauPhase()
-                            battle2.beschussPhase()
+                            self.__sek.quit()
+                            return True
 
                 pygame.display.flip()
 
@@ -503,6 +552,8 @@ SIEG_IMAGE = pygame.image.load('resources/sieg.jpg')
 NIEDERLAGE_IMAGE = pygame.image.load('resources/niederlage.jpg')
 HEHEHEHA = pygame.image.load('resources/heheheha.jpg')
 HEHEHEHA = pygame.transform.scale(HEHEHEHA, (1200, 1200))
+CROSSHAIR_IMAGE = pygame.image.load('resources/crosshair.png').convert_alpha()
+CROSSHAIR = pygame.transform.scale(CROSSHAIR_IMAGE, (60, 60))
 
 SHIP_SNAP = pygame.mixer.Sound('resources/ship_snap.wav')
 SHOT = pygame.mixer.Sound('resources/short_snap.wav')
@@ -535,7 +586,7 @@ font2 = pygame.font.Font('resources/font.ttf', 55)
 
 def play_soundtrack():
     pygame.mixer.music.load('resources/background.mp3')
-    pygame.mixer.music.set_volume(0.03)
+    pygame.mixer.music.set_volume(0.2)
     pygame.mixer.music.play(-1)
 
 
@@ -563,9 +614,11 @@ def draw_window():
 
 
 # Hauptspielphase
-battle = Battleship(screen)
-battle.aufbauPhase()
-battle.beschussPhase()
+run = True
+while run:
+    battle = Battleship(screen)
+    battle.aufbauPhase()
+    run = battle.beschussPhase()
 
 
 # Quellen:
